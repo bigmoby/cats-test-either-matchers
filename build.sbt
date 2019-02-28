@@ -8,8 +8,3 @@ scalaVersion := "2.12.8"
 libraryDependencies +=  "org.scalatest" %% "scalatest" % "3.0.1"
 
 libraryDependencies += "org.typelevel" %% "cats-core" % "1.3.1"
-
-scalacOptions in Test ++= Seq("-Yrangepos")
-
-cancelable in Scope.Global := true
-fork in run := true
