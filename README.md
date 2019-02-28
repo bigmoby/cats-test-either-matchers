@@ -12,18 +12,19 @@ A simple utility matcher for Cats EitherT and plain Either type with Scalatest.
   val leftTest: EitherT[Future, RuntimeException, Any] =
     EitherT.leftT[Future, Any](new RuntimeException("BOOOM!"))
 
-  "EitherMatchers" should {
+  "EitherTMatchers" should {
     "match eitherT successfully with right " in {
-      rightTest mustCompleteWithARight { daTestare =>
-        daTestare.valore2 must be("BigMoby")
+      rightFromEitherTTest mustCompleteWithARight { toTest =>
+        toTest.value2 must be("BigMoby")
       }
     }
     
     "match eitherT successfully with left " in {
-      leftTest mustCompleteWithALeft { ex: RuntimeException =>
+      leftFromEitherTTest mustCompleteWithALeft { ex: RuntimeException =>
         ex.getMessage must be("BOOOM!")
       }
     }
+  }
 ``` 
 
 ##### With Either type
@@ -34,15 +35,17 @@ A simple utility matcher for Cats EitherT and plain Either type with Scalatest.
     new RuntimeException("BOOOM!")
   )
   
-  "match a Right successfully with right " in {
-    rightTest mustBeRight { toTest =>
-      toTest.value2 must be("BigMoby")
+  "EitherTMatchers" should {
+    "match a Right successfully with right " in {
+      rightTest mustBeRight { toTest =>
+          toTest.value2 must be("BigMoby")
+      }
     }
-  }
-
-  "match a Left successfully with left " in {
-    leftTest mustBeLeft { ex =>
-      ex.getMessage must be("BOOOM!")
+    
+    "match a Left successfully with left " in {
+      leftTest mustBeLeft { ex =>
+        ex.getMessage must be("BOOOM!")
+      }
     }
   }
 ```
