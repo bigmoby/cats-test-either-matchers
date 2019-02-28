@@ -16,8 +16,8 @@ object CatsEitherMatchers {
     def mustBeRight(f: R => Assertion): Assertion =
       in must new BeCatsRightEitherMatcher[R](f)
 
-    def mustBeLeft(element: L): Assertion =
-      in must new BeCatsLeftEitherMatcher[L](element)
+    def mustBeLeft(f: L => Assertion): Assertion =
+      in must new BeCatsLeftEitherMatcher[L](f)
   }
 
   implicit class EnrichEitherT[L: ClassTag, R: ClassTag](
@@ -29,28 +29,28 @@ object CatsEitherMatchers {
       new BeCatsRightEitherTMatcher[R](f)(duration)
     }
 
-    def mustCompleteWithALeft[Throwable](
-      f: Throwable => Assertion
-    ): Matcher[EitherT[Future, Throwable, R]] = {
-      new BeCatsLeftEitherTMatcher[Throwable](f)(duration)
+    def mustCompleteWithALeft[L](
+      f: L => Assertion
+    ): Matcher[EitherT[Future, L, R]] = {
+      new BeCatsLeftEitherTMatcher[L](f)(duration)
     }
   }
 }
 
-final private[scalatest] class BeCatsLeftEitherMatcher[E](element: E)
-    extends Matcher[E Either _] {
-  def apply(either: E Either _): MatchResult = {
+final private[scalatest] class BeCatsLeftEitherMatcher[L](f: L => Assertion)
+    extends Matcher[L Either _] {
+  def apply(either: L Either _): MatchResult = {
     MatchResult(
-      either.fold(_ == element, _ => false),
-      s"'$either' did not contain an Left element matching '$element'.",
-      s"'$either' contained an Left element matching '$element', but should not have."
+      either.fold(f(_) == Succeeded, _ => false),
+      s"'$either' did not contain an Left element matching '$f'.",
+      s"'$either' contained an Left element matching '$f', but should not have."
     )
   }
 }
 
-final private[scalatest] class BeCatsRightEitherMatcher[T](f: T => Assertion)
-    extends Matcher[Either[_, T]] {
-  def apply(either: Either[_, T]): MatchResult = {
+final private[scalatest] class BeCatsRightEitherMatcher[R](f: R => Assertion)
+    extends Matcher[Either[_, R]] {
+  def apply(either: Either[_, R]): MatchResult = {
     MatchResult(
       either.fold(_ => false, f(_) == Succeeded),
       s"'$either' did not contain an Right element matching '$f'.",
@@ -59,13 +59,12 @@ final private[scalatest] class BeCatsRightEitherMatcher[T](f: T => Assertion)
   }
 }
 
-final private[scalatest] class BeCatsLeftEitherTMatcher[Throwable](
-  f: Throwable => Assertion
-)(duration: FiniteDuration)
-    extends Matcher[EitherT[Future, Throwable, _]] {
-  def apply(eitherT: EitherT[Future, Throwable, _]): MatchResult = {
+final private[scalatest] class BeCatsLeftEitherTMatcher[L](f: L => Assertion)(
+  duration: FiniteDuration
+) extends Matcher[EitherT[Future, L, _]] {
+  def apply(eitherT: EitherT[Future, L, _]): MatchResult = {
 
-    val left: Either[Throwable, _] = Await.result(eitherT.value, duration)
+    val left: Either[L, _] = Await.result(eitherT.value, duration)
 
     MatchResult(
       left.fold(f(_) == Succeeded, _ => false),
